@@ -2,8 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PortfolioATS.Core.Interfaces;
+using PortfolioATS.Core.Models;
 using PortfolioATS.Infrastructure.Data;
 using PortfolioATS.Infrastructure.Repositories;
+using PortfolioATS.Infrastructure.Services;
 
 namespace PortfolioATS.Infrastructure
 {
@@ -11,12 +13,15 @@ namespace PortfolioATS.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Configuração do MongoDB - FORMA CORRETA
+            // Configuração do MongoDB
             services.Configure<MongoDBSettings>(configuration.GetSection("MongoDBSettings"));
+            services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
 
-            // Registrar MongoDBSettings como singleton para acesso direto se necessário
+            // Registrar configurações como singleton para acesso direto
             services.AddSingleton<MongoDBSettings>(sp =>
                 sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
+            services.AddSingleton<JwtSettings>(sp =>
+                sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
             // MongoDB Context
             services.AddSingleton<MongoDBContext>();
@@ -30,6 +35,9 @@ namespace PortfolioATS.Infrastructure
             services.AddScoped<ICertificationRepository, CertificationRepository>();
             services.AddScoped<ILanguageRepository, LanguageRepository>();
             services.AddScoped<ISocialLinkRepository, SocialLinkRepository>();
+
+            // Serviços
+            services.AddScoped<IAuthService, AuthService>();
 
             return services;
         }
