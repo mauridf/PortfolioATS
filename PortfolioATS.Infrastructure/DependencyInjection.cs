@@ -34,6 +34,7 @@ namespace PortfolioATS.Infrastructure
             // Serviços
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProfileService, ProfileService>();
+            services.AddScoped<IDashboardService, DashboardService>();
 
             // Inicializar índices do MongoDB
             services.AddHostedService<MongoDBIndexService>();
