@@ -12,6 +12,8 @@ namespace PortfolioATS.Infrastructure.Data
     {
         private readonly IMongoDatabase _database;
         private readonly MongoDBSettings _settings;
+        private bool _indexesCreated = false;
+        private readonly object _lockObject = new object();
 
         static MongoDBContext()
         {
@@ -46,6 +48,26 @@ namespace PortfolioATS.Infrastructure.Data
         // Collections
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
         public IMongoCollection<Profile> Profiles => _database.GetCollection<Profile>("Profiles");
+
+        public async Task EnsureIndexesCreatedAsync()
+        {
+            if (_indexesCreated) return;
+
+            lock (_lockObject)
+            {
+                if (_indexesCreated) return;
+
+                try
+                {
+                    CreateIndexes();
+                    _indexesCreated = true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erro ao criar índices: {ex.Message}");
+                }
+            }
+        }
 
         private void CreateIndexes()
         {

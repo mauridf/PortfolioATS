@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using PortfolioATS.Core.Interfaces;
 using PortfolioATS.Core.Models;
@@ -13,15 +14,9 @@ namespace PortfolioATS.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Configuração do MongoDB
+            // Configuração
             services.Configure<MongoDBSettings>(configuration.GetSection("MongoDBSettings"));
             services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
-
-            // Registrar configurações como singleton para acesso direto
-            services.AddSingleton<MongoDBSettings>(sp =>
-                sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
-            services.AddSingleton<JwtSettings>(sp =>
-                sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
             // MongoDB Context
             services.AddSingleton<MongoDBContext>();
@@ -38,8 +33,31 @@ namespace PortfolioATS.Infrastructure
 
             // Serviços
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IProfileService, ProfileService>();
+
+            // Inicializar índices do MongoDB
+            services.AddHostedService<MongoDBIndexService>();
 
             return services;
         }
+    }
+
+    public class MongoDBIndexService : IHostedService
+    {
+        private readonly IServiceProvider _serviceProvider;
+
+        public MongoDBIndexService(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<MongoDBContext>();
+            await context.EnsureIndexesCreatedAsync();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }
