@@ -68,6 +68,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var language = new Core.Entities.Language
                 {
+                    UserId = userId,
                     Name = request.Name,
                     Proficiency = request.Proficiency
                 };
@@ -95,9 +96,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar o idioma existente para validar ownership
+                var existingLanguages = await _languageRepository.GetByUserIdAsync(userId);
+                var existingLanguage = existingLanguages.FirstOrDefault(l => l.Id == id);
+
+                if (existingLanguage == null)
+                {
+                    return NotFound(new { message = "Idioma não encontrado." });
+                }
+
+                // Validar se o usuário é o dono do idioma
+                ValidateUserOwnership(existingLanguage.UserId);
+
                 var language = new Core.Entities.Language
                 {
                     Id = id,
+                    UserId = userId,
                     Name = request.Name,
                     Proficiency = request.Proficiency
                 };
@@ -122,6 +137,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar o idioma existente para validar ownership
+                var existingLanguages = await _languageRepository.GetByUserIdAsync(userId);
+                var existingLanguage = existingLanguages.FirstOrDefault(l => l.Id == id);
+
+                if (existingLanguage == null)
+                {
+                    return NotFound(new { message = "Idioma não encontrado." });
+                }
+
+                // Validar se o usuário é o dono do idioma
+                ValidateUserOwnership(existingLanguage.UserId);
+
                 var success = await _languageRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

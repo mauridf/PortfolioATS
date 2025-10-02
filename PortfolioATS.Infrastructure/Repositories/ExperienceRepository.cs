@@ -15,10 +15,10 @@ namespace PortfolioATS.Infrastructure.Repositories
             return profile?.Experiences ?? new List<Experience>();
         }
 
-        public async Task<IEnumerable<Experience>> GetByCompanyAsync(string company)
+        public async Task<IEnumerable<Experience>> GetByCompanyAsync(string company, string userId)
         {
-            var profiles = await _profileCollection.Find(_ => true).ToListAsync();
-            return profiles.SelectMany(p => p.Experiences.Where(e => e.Company.Contains(company)));
+            var profile = await _profileCollection.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+            return profile?.Experiences.Where(e => e.Company.Contains(company)) ?? new List<Experience>();
         }
 
         public async Task<IEnumerable<Experience>> GetCurrentExperiencesAsync(string userId)
@@ -29,6 +29,8 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<Experience> AddToProfileAsync(string userId, Experience entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.Eq(p => p.UserId, userId);
             var update = Builders<Profile>.Update.Push(p => p.Experiences, entity);
 
@@ -38,6 +40,8 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<bool> UpdateInProfileAsync(string userId, string entityId, Experience entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.And(
                 Builders<Profile>.Filter.Eq(p => p.UserId, userId),
                 Builders<Profile>.Filter.ElemMatch(p => p.Experiences, e => e.Id == entityId)

@@ -97,6 +97,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var experience = new Core.Entities.Experience
                 {
+                    UserId = userId,
                     Company = request.Company,
                     Position = request.Position,
                     StartDate = request.StartDate,
@@ -148,9 +149,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a experiência existente para validar ownership
+                var existingExperiences = await _experienceRepository.GetByUserIdAsync(userId);
+                var existingExperience = existingExperiences.FirstOrDefault(e => e.Id == id);
+
+                if (existingExperience == null)
+                {
+                    return NotFound(new { message = "Experiência não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da experiência
+                ValidateUserOwnership(existingExperience.UserId);
+
                 var experience = new Core.Entities.Experience
                 {
                     Id = id,
+                    UserId = userId,
                     Company = request.Company,
                     Position = request.Position,
                     StartDate = request.StartDate,
@@ -181,6 +196,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a experiência existente para validar ownership
+                var existingExperiences = await _experienceRepository.GetByUserIdAsync(userId);
+                var existingExperience = existingExperiences.FirstOrDefault(e => e.Id == id);
+
+                if (existingExperience == null)
+                {
+                    return NotFound(new { message = "Experiência não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da experiência
+                ValidateUserOwnership(existingExperience.UserId);
+
                 var success = await _experienceRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

@@ -19,7 +19,16 @@ namespace PortfolioATS.API.Controllers
             return userId;
         }
 
-        // Métodos específicos para diferentes tipos de retorno
+        // Validar se o usuário tem acesso à entidade
+        protected void ValidateUserOwnership(string entityUserId)
+        {
+            var currentUserId = GetUserId();
+            if (entityUserId != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Acesso não autorizado a este recurso.");
+            }
+        }
+
         protected ActionResult<T> HandleException<T>(Exception ex)
         {
             if (ex is UnauthorizedAccessException)

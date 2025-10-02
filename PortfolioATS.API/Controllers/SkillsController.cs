@@ -71,6 +71,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var skill = new Core.Entities.Skill
                 {
+                    UserId = userId,
                     Name = request.Name,
                     Category = request.Category,
                     Level = request.Level,
@@ -102,9 +103,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a skill existente para validar ownership
+                var existingSkills = await _skillRepository.GetByUserIdAsync(userId);
+                var existingSkill = existingSkills.FirstOrDefault(s => s.Id == id);
+
+                if (existingSkill == null)
+                {
+                    return NotFound(new { message = "Skill não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da skill
+                ValidateUserOwnership(existingSkill.UserId);
+
                 var skill = new Core.Entities.Skill
                 {
                     Id = id,
+                    UserId = userId,
                     Name = request.Name,
                     Category = request.Category,
                     Level = request.Level,
@@ -131,6 +146,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a skill existente para validar ownership
+                var existingSkills = await _skillRepository.GetByUserIdAsync(userId);
+                var existingSkill = existingSkills.FirstOrDefault(s => s.Id == id);
+
+                if (existingSkill == null)
+                {
+                    return NotFound(new { message = "Skill não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da skill
+                ValidateUserOwnership(existingSkill.UserId);
+
                 var success = await _skillRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

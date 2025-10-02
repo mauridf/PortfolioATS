@@ -75,6 +75,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var certification = new Core.Entities.Certification
                 {
+                    UserId = userId,
                     Name = request.Name,
                     IssuingOrganization = request.IssuingOrganization,
                     IssueDate = request.IssueDate,
@@ -110,9 +111,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a certificação existente para validar ownership
+                var existingCertifications = await _certificationRepository.GetByUserIdAsync(userId);
+                var existingCertification = existingCertifications.FirstOrDefault(c => c.Id == id);
+
+                if (existingCertification == null)
+                {
+                    return NotFound(new { message = "Certificação não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da certificação
+                ValidateUserOwnership(existingCertification.UserId);
+
                 var certification = new Core.Entities.Certification
                 {
                     Id = id,
+                    UserId = userId,
                     Name = request.Name,
                     IssuingOrganization = request.IssuingOrganization,
                     IssueDate = request.IssueDate,
@@ -141,6 +156,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a certificação existente para validar ownership
+                var existingCertifications = await _certificationRepository.GetByUserIdAsync(userId);
+                var existingCertification = existingCertifications.FirstOrDefault(c => c.Id == id);
+
+                if (existingCertification == null)
+                {
+                    return NotFound(new { message = "Certificação não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da certificação
+                ValidateUserOwnership(existingCertification.UserId);
+
                 var success = await _certificationRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

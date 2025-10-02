@@ -15,14 +15,16 @@ namespace PortfolioATS.Infrastructure.Repositories
             return profile?.Languages ?? new List<Language>();
         }
 
-        public async Task<IEnumerable<Language>> GetByProficiencyAsync(string proficiency)
+        public async Task<IEnumerable<Language>> GetByProficiencyAsync(string proficiency, string userId)
         {
-            var profiles = await _profileCollection.Find(_ => true).ToListAsync();
-            return profiles.SelectMany(p => p.Languages.Where(l => l.Proficiency == proficiency));
+            var profile = await _profileCollection.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+            return profile?.Languages.Where(l => l.Proficiency == proficiency) ?? new List<Language>();
         }
 
         public async Task<Language> AddToProfileAsync(string userId, Language entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.Eq(p => p.UserId, userId);
             var update = Builders<Profile>.Update.Push(p => p.Languages, entity);
 
@@ -32,6 +34,8 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<bool> UpdateInProfileAsync(string userId, string entityId, Language entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.And(
                 Builders<Profile>.Filter.Eq(p => p.UserId, userId),
                 Builders<Profile>.Filter.ElemMatch(p => p.Languages, l => l.Id == entityId)

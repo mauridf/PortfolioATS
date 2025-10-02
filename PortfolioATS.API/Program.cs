@@ -15,6 +15,31 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Configuração do CORS - ADICIONAR ESTA SEÇÃO
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularLocalhost", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4200",    // Angular dev server padrão
+                "https://localhost:4200",   // Angular com HTTPS
+                "http://localhost:4201",    // Porta alternativa
+                "https://localhost:4201"    // Porta alternativa com HTTPS
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+
+    // Política mais permissiva para desenvolvimento
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Configuração do MongoDB
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -82,10 +107,25 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PortfolioATS API v1");
+        c.RoutePrefix = string.Empty; // Coloca o Swagger na raiz
+    });
+
+    // Usar CORS mais permissivo em desenvolvimento
+    app.UseCors("AllowAll");
+}
+else
+{
+    // Em produção, usar política mais restrita
+    app.UseCors("AllowAngularLocalhost");
 }
 
 app.UseHttpsRedirection();
+
+// Adicionar CORS - IMPORTANTE: Deve vir antes de Authentication e Authorization
+app.UseCors("AllowAngularLocalhost");
 
 // Adicionar autenticação e autorização
 app.UseAuthentication();

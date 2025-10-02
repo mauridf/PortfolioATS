@@ -49,6 +49,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var education = new Core.Entities.Education
                 {
+                    UserId = userId,
                     Institution = request.Institution,
                     Degree = request.Degree,
                     FieldOfStudy = request.FieldOfStudy,
@@ -86,9 +87,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a educação existente para validar ownership
+                var existingEducations = await _educationRepository.GetByUserIdAsync(userId);
+                var existingEducation = existingEducations.FirstOrDefault(e => e.Id == id);
+
+                if (existingEducation == null)
+                {
+                    return NotFound(new { message = "Formação não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da educação
+                ValidateUserOwnership(existingEducation.UserId);
+
                 var education = new Core.Entities.Education
                 {
                     Id = id,
+                    UserId = userId,
                     Institution = request.Institution,
                     Degree = request.Degree,
                     FieldOfStudy = request.FieldOfStudy,
@@ -118,6 +133,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar a educação existente para validar ownership
+                var existingEducations = await _educationRepository.GetByUserIdAsync(userId);
+                var existingEducation = existingEducations.FirstOrDefault(e => e.Id == id);
+
+                if (existingEducation == null)
+                {
+                    return NotFound(new { message = "Formação não encontrada." });
+                }
+
+                // Validar se o usuário é o dono da educação
+                ValidateUserOwnership(existingEducation.UserId);
+
                 var success = await _educationRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

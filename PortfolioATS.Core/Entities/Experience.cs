@@ -7,6 +7,7 @@ namespace PortfolioATS.Core.Entities
         [BsonId]
         [BsonRepresentation(MongoDB.Bson.BsonType.String)]
         public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string UserId { get; set; } = string.Empty;
 
         public string Company { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;

@@ -15,10 +15,10 @@ namespace PortfolioATS.Infrastructure.Repositories
             return profile?.Certifications ?? new List<Certification>();
         }
 
-        public async Task<IEnumerable<Certification>> GetByIssuingOrganizationAsync(string organization)
+        public async Task<IEnumerable<Certification>> GetByIssuingOrganizationAsync(string organization, string userId)
         {
-            var profiles = await _profileCollection.Find(_ => true).ToListAsync();
-            return profiles.SelectMany(p => p.Certifications.Where(c => c.IssuingOrganization.Contains(organization)));
+            var profile = await _profileCollection.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+            return profile?.Certifications.Where(c => c.IssuingOrganization.Contains(organization)) ?? new List<Certification>();
         }
 
         public async Task<IEnumerable<Certification>> GetExpiredCertificationsAsync(string userId)
@@ -30,6 +30,8 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<Certification> AddToProfileAsync(string userId, Certification entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.Eq(p => p.UserId, userId);
             var update = Builders<Profile>.Update.Push(p => p.Certifications, entity);
 
@@ -39,6 +41,8 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<bool> UpdateInProfileAsync(string userId, string entityId, Certification entity)
         {
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.And(
                 Builders<Profile>.Filter.Eq(p => p.UserId, userId),
                 Builders<Profile>.Filter.ElemMatch(p => p.Certifications, c => c.Id == entityId)

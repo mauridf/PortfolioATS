@@ -45,6 +45,7 @@ namespace PortfolioATS.API.Controllers
                 var userId = GetUserId();
                 var socialLink = new Core.Entities.SocialLink
                 {
+                    UserId = userId,
                     Platform = request.Platform,
                     Url = request.Url,
                     Username = request.Username
@@ -74,9 +75,23 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar o social link existente para validar ownership
+                var existingSocialLinks = await _socialLinkRepository.GetByUserIdAsync(userId);
+                var existingSocialLink = existingSocialLinks.FirstOrDefault(sl => sl.Id == id);
+
+                if (existingSocialLink == null)
+                {
+                    return NotFound(new { message = "Social link não encontrado." });
+                }
+
+                // Validar se o usuário é o dono do social link
+                ValidateUserOwnership(existingSocialLink.UserId);
+
                 var socialLink = new Core.Entities.SocialLink
                 {
                     Id = id,
+                    UserId = userId,
                     Platform = request.Platform,
                     Url = request.Url,
                     Username = request.Username
@@ -102,6 +117,19 @@ namespace PortfolioATS.API.Controllers
             try
             {
                 var userId = GetUserId();
+
+                // Buscar o social link existente para validar ownership
+                var existingSocialLinks = await _socialLinkRepository.GetByUserIdAsync(userId);
+                var existingSocialLink = existingSocialLinks.FirstOrDefault(sl => sl.Id == id);
+
+                if (existingSocialLink == null)
+                {
+                    return NotFound(new { message = "Social link não encontrado." });
+                }
+
+                // Validar se o usuário é o dono do social link
+                ValidateUserOwnership(existingSocialLink.UserId);
+
                 var success = await _socialLinkRepository.DeleteFromProfileAsync(userId, id);
                 if (!success)
                 {

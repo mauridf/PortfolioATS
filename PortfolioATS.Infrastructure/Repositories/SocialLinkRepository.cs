@@ -15,14 +15,17 @@ namespace PortfolioATS.Infrastructure.Repositories
             return profile?.SocialLinks ?? new List<SocialLink>();
         }
 
-        public async Task<IEnumerable<SocialLink>> GetByPlatformAsync(string platform)
+        public async Task<IEnumerable<SocialLink>> GetByPlatformAsync(string platform, string userId)
         {
-            var profiles = await _profileCollection.Find(_ => true).ToListAsync();
-            return profiles.SelectMany(p => p.SocialLinks.Where(sl => sl.Platform == platform));
+            var profile = await _profileCollection.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+            return profile?.SocialLinks.Where(sl => sl.Platform == platform) ?? new List<SocialLink>();
         }
 
         public async Task<SocialLink> AddToProfileAsync(string userId, SocialLink entity)
         {
+            // Garantir que o UserId está correto
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.Eq(p => p.UserId, userId);
             var update = Builders<Profile>.Update.Push(p => p.SocialLinks, entity);
 
@@ -32,6 +35,9 @@ namespace PortfolioATS.Infrastructure.Repositories
 
         public async Task<bool> UpdateInProfileAsync(string userId, string entityId, SocialLink entity)
         {
+            // Garantir que o UserId está correto
+            entity.UserId = userId;
+
             var filter = Builders<Profile>.Filter.And(
                 Builders<Profile>.Filter.Eq(p => p.UserId, userId),
                 Builders<Profile>.Filter.ElemMatch(p => p.SocialLinks, sl => sl.Id == entityId)
