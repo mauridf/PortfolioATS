@@ -140,8 +140,9 @@ namespace PortfolioATS.Infrastructure.Services
         {
             var completion = await CalculateProfileCompletionAsync(profile.UserId);
 
-            // Extrair título profissional da última experiência
-            var currentPosition = profile.Experiences
+            // Carregar experiências com skills para obter a posição atual
+            var experiences = await _experienceRepository.GetByUserIdAsync(profile.UserId);
+            var currentPosition = experiences
                 .Where(e => e.IsCurrent)
                 .OrderByDescending(e => e.StartDate)
                 .FirstOrDefault()?.Position ?? "Profissional";

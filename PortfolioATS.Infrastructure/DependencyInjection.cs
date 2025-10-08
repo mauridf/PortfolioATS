@@ -23,8 +23,8 @@ namespace PortfolioATS.Infrastructure
 
             // Repositórios
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<ISkillRepository, SkillRepository>();
+            services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<IExperienceRepository, ExperienceRepository>();
             services.AddScoped<IEducationRepository, EducationRepository>();
             services.AddScoped<ICertificationRepository, CertificationRepository>();

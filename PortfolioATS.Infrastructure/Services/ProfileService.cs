@@ -7,10 +7,12 @@ namespace PortfolioATS.Infrastructure.Services
     public class ProfileService : IProfileService
     {
         private readonly IProfileRepository _profileRepository;
+        private readonly IExperienceRepository _experienceRepository;
 
-        public ProfileService(IProfileRepository profileRepository)
+        public ProfileService(IProfileRepository profileRepository, IExperienceRepository experienceRepository)
         {
             _profileRepository = profileRepository;
+            _experienceRepository = experienceRepository;
         }
 
         public async Task<ProfileDto> GetProfileByUserIdAsync(string userId)
@@ -20,6 +22,10 @@ namespace PortfolioATS.Infrastructure.Services
             {
                 throw new ArgumentException("Perfil não encontrado.");
             }
+
+            // Carregar experiências com skills completas
+            var experiencesWithSkills = await _experienceRepository.GetByUserIdAsync(userId);
+            profile.Experiences = experiencesWithSkills.ToList();
 
             return MapToDto(profile);
         }

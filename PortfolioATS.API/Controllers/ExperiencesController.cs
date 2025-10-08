@@ -7,12 +7,10 @@ namespace PortfolioATS.API.Controllers
     public class ExperiencesController : BaseEmbeddedController
     {
         private readonly IExperienceRepository _experienceRepository;
-        private readonly ISkillRepository _skillRepository;
 
-        public ExperiencesController(IExperienceRepository experienceRepository, ISkillRepository skillRepository)
+        public ExperiencesController(IExperienceRepository experienceRepository)
         {
             _experienceRepository = experienceRepository;
-            _skillRepository = skillRepository;
         }
 
         [HttpGet]
@@ -106,11 +104,8 @@ namespace PortfolioATS.API.Controllers
                     Description = request.Description,
                     EmploymentType = request.EmploymentType,
                     SkillIds = request.SkillIds
+                    // Skills serão carregadas automaticamente pelo repositório
                 };
-
-                // Buscar skills relacionadas para incluir no response
-                var allSkills = await _skillRepository.GetByUserIdAsync(userId);
-                experience.Skills = allSkills.Where(s => request.SkillIds.Contains(s.Id)).ToList();
 
                 var result = await _experienceRepository.AddToProfileAsync(userId, experience);
 
@@ -174,6 +169,7 @@ namespace PortfolioATS.API.Controllers
                     Description = request.Description,
                     EmploymentType = request.EmploymentType,
                     SkillIds = request.SkillIds
+                    // Skills serão carregadas automaticamente pelo repositório
                 };
 
                 var success = await _experienceRepository.UpdateInProfileAsync(userId, id, experience);
